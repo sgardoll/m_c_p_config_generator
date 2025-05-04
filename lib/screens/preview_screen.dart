@@ -15,7 +15,8 @@ class PreviewScreen extends StatefulWidget {
   State<PreviewScreen> createState() => _PreviewScreenState();
 }
 
-class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProviderStateMixin {
+class _PreviewScreenState extends State<PreviewScreen>
+    with SingleTickerProviderStateMixin {
   final ConfigService _configService = ConfigService();
   final AiService _aiService = AiService();
   ConfigurationItem? _config;
@@ -68,7 +69,8 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
     });
 
     try {
-      final analysis = await _aiService.analyzeConfiguration(_config!.configData);
+      final analysis =
+          await _aiService.analyzeConfiguration(_config!.configData);
       setState(() {
         _aiAnalysis = analysis;
         _isAnalyzing = false;
@@ -106,7 +108,8 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Export Options'),
-        content: const Text('Would you like to export just this configuration or combine all your configurations into a single file?'),
+        content: const Text(
+            'Would you like to export just this configuration or combine all your configurations into a single file?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop('single'),
@@ -132,9 +135,9 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
           children: [
             const CircularProgressIndicator(),
             const SizedBox(width: 16),
-            Text(choice == 'single' 
-              ? 'Preparing configuration...' 
-              : 'Preparing combined configuration...'),
+            Text(choice == 'single'
+                ? 'Preparing configuration...'
+                : 'Preparing combined configuration...'),
           ],
         ),
       ),
@@ -164,18 +167,19 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
       try {
         final result = await Share.share(
           jsonData,
-          subject: choice == 'combined' ? 'MCP Combined Configuration' : 'MCP Configuration',
+          subject: choice == 'combined'
+              ? 'MCP Combined Configuration'
+              : 'MCP Configuration',
         );
-        
+
         print('Share result: $result');
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(
-              choice == 'combined' 
-                  ? 'Combined configuration exported successfully' 
-                  : 'Configuration exported successfully'
-            )),
+            SnackBar(
+                content: Text(choice == 'combined'
+                    ? 'Combined configuration exported successfully'
+                    : 'Configuration exported successfully')),
           );
         }
       } catch (e) {
@@ -191,7 +195,7 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
         } catch (_) {
           // Dialog might already be closed
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error exporting configuration: $e')),
         );
@@ -241,10 +245,22 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
             tooltip: 'Copy to Clipboard',
             onPressed: _copyToClipboard,
           ),
-          IconButton(
-            icon: const Icon(Icons.share),
-            tooltip: 'Export File',
-            onPressed: _exportFile,
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: ElevatedButton.icon(
+              icon: const Icon(
+                Icons.download_rounded,
+                size: 24,
+              ),
+              label: const Text('Export'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              onPressed: _exportFile,
+            ),
           ),
         ],
       ),
@@ -261,7 +277,8 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
   Widget _buildJsonPreview() {
     final theme = Theme.of(context);
     final jsonString = _config!.configData.toJsonString(pretty: true);
-    final json = const JsonDecoder().convert(jsonString) as Map<String, dynamic>;
+    final json =
+        const JsonDecoder().convert(jsonString) as Map<String, dynamic>;
 
     return Container(
       color: theme.colorScheme.surface,
@@ -274,7 +291,8 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
             color: theme.brightness == Brightness.dark
                 ? const Color(0xFF1E1E1E) // Dark code background
                 : const Color(0xFFF8F9FA), // Light code background
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -299,7 +317,8 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
           Expanded(
             child: Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -362,8 +381,8 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
                               entry.value is String
                                   ? '"${entry.value}"${isLast ? '' : ','} '
                                   : '${entry.value}${isLast ? '' : ','} ',
-                              style: _getJsonStyle(
-                                  theme, entry.value is String ? 'string' : 'value'),
+                              style: _getJsonStyle(theme,
+                                  entry.value is String ? 'string' : 'value'),
                             ),
                     ),
                   ],
@@ -416,8 +435,8 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
                               entry.value is String
                                   ? '"${entry.value}"${isLast ? '' : ','} '
                                   : '${entry.value}${isLast ? '' : ','} ',
-                              style: _getJsonStyle(
-                                  theme, entry.value is String ? 'string' : 'value'),
+                              style: _getJsonStyle(theme,
+                                  entry.value is String ? 'string' : 'value'),
                             ),
                     ),
                   ],
@@ -480,7 +499,8 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
           Card(
             elevation: 0,
             color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -521,14 +541,14 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (_isAnalyzing) ...[  
+                        if (_isAnalyzing) ...[
                           const CircularProgressIndicator(),
                           const SizedBox(height: 24),
                           Text(
                             'Analyzing your configuration...',
                             style: theme.textTheme.bodyLarge,
                           ),
-                        ] else ...[  
+                        ] else ...[
                           Icon(
                             Icons.analytics_outlined,
                             size: 64,
@@ -544,7 +564,8 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
                             'Click the button below to analyze your configuration',
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.7),
+                              color:
+                                  theme.colorScheme.onSurface.withOpacity(0.7),
                             ),
                           ),
                           const SizedBox(height: 32),
@@ -567,7 +588,8 @@ class _PreviewScreenState extends State<PreviewScreen> with SingleTickerProvider
                   )
                 : Card(
                     elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(

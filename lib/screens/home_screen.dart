@@ -77,9 +77,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
-      backgroundColor: theme.brightness == Brightness.light 
+      backgroundColor: theme.brightness == Brightness.light
           ? const Color(0xFFF5F7FA)
           : const Color(0xFF1A1F24),
       appBar: AppBar(
@@ -167,7 +167,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               'Create your first MCP server',
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodyLarge?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.7),
                               ),
                             ),
                             const SizedBox(height: 32),
@@ -180,7 +181,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
                   return Column(
                     children: [
-                      ...configs.map((config) => _buildServerCard(config, theme)),
+                      ...configs
+                          .map((config) => _buildServerCard(config, theme)),
                       const SizedBox(height: 40),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -223,10 +225,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildServerCard(ConfigurationItem config, ThemeData theme) {
+    // Count how many servers are in this configuration
+    final int serverCount = config.configData.mcpServers.length;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Card(
-        elevation: 0,
+        elevation: 2, // Adding a subtle elevation for depth
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
@@ -243,78 +248,169 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             );
           },
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        config.name,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (config.description.isNotEmpty) ...[  
-                        const SizedBox(height: 4),
-                        Text(
-                          config.description,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                        ),
-                      ],
-                    ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top colored accent bar
+              Container(
+                height: 6,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.7),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
                   ),
                 ),
-                _buildAddServerButton(context, configId: config.id),
-                const SizedBox(width: 12),
-                PopupMenuButton<String>(
-                  icon: Icon(
-                    Icons.more_vert,
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
-                  ),
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ServerConfigScreen(
-                            configId: config.id,
-                          ),
-                        ),
-                      );
-                    } else if (value == 'delete') {
-                      _deleteConfiguration(config.id, config.name);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem<String>(
-                      value: 'edit',
-                      child: Row(
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Server icon with count indicator
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Stack(
                         children: [
-                          Icon(Icons.edit, size: 18),
-                          SizedBox(width: 8),
-                          Text('Edit'),
+                          // Center server icon
+                          const Center(
+                            child: Icon(
+                              Icons.dns_rounded,
+                              size: 28,
+                            ),
+                          ),
+                          // Server count badge
+                          if (serverCount > 0)
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  serverCount.toString(),
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onPrimary,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
-                    PopupMenuItem<String>(
-                      value: 'delete',
-                      child: Row(
+                    const SizedBox(width: 16),
+                    // Content
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.delete, size: 18, color: theme.colorScheme.error),
-                          const SizedBox(width: 8),
-                          Text('Delete', style: TextStyle(color: theme.colorScheme.error)),
+                          Text(
+                            config.name,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (config.description.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              config.description,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.6),
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          // Last updated date
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.update,
+                                size: 14,
+                                color: theme.colorScheme.onSurface
+                                    .withOpacity(0.5),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Updated ${_formatDate(config.updatedAt)}',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.5),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
+                    ),
+                    // Actions
+                    Column(
+                      children: [
+                        // Actions menu
+                        PopupMenuButton<String>(
+                          icon: Icon(
+                            Icons.more_vert,
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ServerConfigScreen(
+                                    configId: config.id,
+                                  ),
+                                ),
+                              );
+                            } else if (value == 'delete') {
+                              _deleteConfiguration(config.id, config.name);
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem<String>(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Edit'),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem<String>(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete,
+                                      size: 18, color: Colors.red),
+                                  const SizedBox(width: 8),
+                                  Text('Delete',
+                                      style: TextStyle(color: Colors.red)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // Add server button
+                        _buildAddServerButton(context, configId: config.id),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -323,8 +419,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildAddServerButton(BuildContext context, {String? configId}) {
     final theme = Theme.of(context);
-    
-    return TextButton.icon(
+
+    return ElevatedButton.icon(
       onPressed: () {
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -334,18 +430,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       },
       icon: Icon(
         Icons.add,
-        color: theme.colorScheme.primary,
-        size: 18,
+        color: theme.colorScheme.onPrimary,
+        size: 16,
       ),
       label: Text(
-        'Add server',
+        'Add Server',
         style: TextStyle(
-          color: theme.colorScheme.primary,
+          color: theme.colorScheme.onPrimary,
           fontWeight: FontWeight.w500,
+          fontSize: 13,
         ),
       ),
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        minimumSize: const Size(100, 32),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
       ),
     );
   }
@@ -366,17 +469,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       return '${date.month}/${date.day}/${date.year}';
     }
   }
-  
+
   Future<void> _exportCombinedConfig() async {
     if (_isExporting) return;
-    
+
     setState(() {
       _isExporting = true;
     });
-    
+
     // Variable to track if dialog is open
     bool isDialogOpen = false;
-    
+
     try {
       // Show loading dialog
       if (!mounted) return;
@@ -394,10 +497,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
       );
       isDialogOpen = true;
-      
+
       // Get all configurations
       final configs = await _configService.getAllConfigurations();
-      
+
       if (configs.isEmpty) {
         if (!mounted) return;
         if (isDialogOpen) {
@@ -409,31 +512,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         );
         return;
       }
-      
+
       // Combine all configurations
       final combinedConfig = _configService.combineConfigurations(configs);
-      
+
       // Generate the JSON string
       final prettyJson = combinedConfig.toJsonString(pretty: true);
       print('Generated JSON string, length: ${prettyJson.length}');
-      
+
       if (!mounted) return;
       if (isDialogOpen) {
         Navigator.of(context).pop(); // Close loading dialog
         isDialogOpen = false;
       }
-      
+
       // Share the JSON data directly
       try {
         final result = await Share.share(
           prettyJson,
           subject: 'MCP Configuration Export',
         );
-        
+
         print('Share result: $result');
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Combined configuration exported successfully')),
+          const SnackBar(
+              content: Text('Combined configuration exported successfully')),
         );
       } catch (e) {
         print('Error sharing configuration: $e');
@@ -442,7 +546,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } catch (e) {
       print('Export error: $e');
       if (!mounted) return;
-      
+
       // Make sure dialog is closed even if there's an error
       if (isDialogOpen) {
         try {
@@ -452,7 +556,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           // Dialog might not be open, ignore error
         }
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error exporting configuration: $e')),
       );
