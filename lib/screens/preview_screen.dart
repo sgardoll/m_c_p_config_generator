@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:dreamflow/models/mcp_config.dart';
-import 'package:dreamflow/services/config_service.dart';
-import 'package:dreamflow/services/ai_service.dart';
+import 'package:mcp_config_manager/models/mcp_config.dart';
+import 'package:mcp_config_manager/services/config_service.dart';
+import 'package:mcp_config_manager/services/ai_service.dart';
 import 'package:share_plus/share_plus.dart';
 
 class PreviewScreen extends StatefulWidget {

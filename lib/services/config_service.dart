@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dreamflow/models/mcp_config.dart';
-import 'package:dreamflow/services/auth_service.dart';
+import 'package:mcp_config_manager/models/mcp_config.dart';
+import 'package:mcp_config_manager/services/auth_service.dart';
 
 class ConfigService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -25,9 +25,12 @@ class ConfigService {
           id: doc.id,
           name: data['name'] ?? '',
           description: data['description'] ?? '',
-          configData: McpConfig.fromJson(data['config_data'] ?? {'mcpServers': {}}),
-          createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          updatedAt: (data['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          configData:
+              McpConfig.fromJson(data['config_data'] ?? {'mcpServers': {}}),
+          createdAt:
+              (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          updatedAt:
+              (data['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
           isFavorite: data['is_favorite'] ?? false,
         );
       }).toList();
@@ -53,9 +56,12 @@ class ConfigService {
         id: doc.id,
         name: data['name'] ?? '',
         description: data['description'] ?? '',
-        configData: McpConfig.fromJson(data['config_data'] ?? {'mcpServers': {}}),
-        createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
-        updatedAt: (data['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        configData:
+            McpConfig.fromJson(data['config_data'] ?? {'mcpServers': {}}),
+        createdAt:
+            (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        updatedAt:
+            (data['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
         isFavorite: data['is_favorite'] ?? false,
       );
     }).toList();
@@ -71,13 +77,13 @@ class ConfigService {
         if (config.configData.mcpServers.isEmpty) {
           continue; // Skip empty configurations
         }
-        
+
         config.configData.mcpServers.forEach((key, server) {
           // Skip invalid servers
           if (key.isEmpty) {
             return;
           }
-          
+
           // If server key already exists, add a suffix to make it unique
           String uniqueKey = key;
           int suffix = 1;
@@ -85,7 +91,7 @@ class ConfigService {
             uniqueKey = '${key}_$suffix';
             suffix++;
           }
-          
+
           combinedServers[uniqueKey] = server;
         });
       }
@@ -100,7 +106,8 @@ class ConfigService {
 
   // Get a single configuration by ID
   Future<ConfigurationItem?> getConfiguration(String configId) async {
-    final doc = await _firestore.collection('configurations').doc(configId).get();
+    final doc =
+        await _firestore.collection('configurations').doc(configId).get();
     if (!doc.exists) {
       return null;
     }
@@ -163,7 +170,10 @@ class ConfigService {
     if (configData != null) updateData['config_data'] = configData.toJson();
     if (isFavorite != null) updateData['is_favorite'] = isFavorite;
 
-    await _firestore.collection('configurations').doc(configId).update(updateData);
+    await _firestore
+        .collection('configurations')
+        .doc(configId)
+        .update(updateData);
   }
 
   // Delete a configuration

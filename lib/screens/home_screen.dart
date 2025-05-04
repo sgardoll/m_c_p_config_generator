@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:dreamflow/services/auth_service.dart';
-import 'package:dreamflow/services/config_service.dart';
-import 'package:dreamflow/screens/auth_screen.dart';
-import 'package:dreamflow/screens/server_config_screen.dart';
-import 'package:dreamflow/screens/preview_screen.dart';
+import 'package:mcp_config_manager/services/auth_service.dart';
+import 'package:mcp_config_manager/services/config_service.dart';
+import 'package:mcp_config_manager/screens/auth_screen.dart';
+import 'package:mcp_config_manager/screens/server_config_screen.dart';
+import 'package:mcp_config_manager/screens/preview_screen.dart';
 import 'package:share_plus/share_plus.dart';
 
 class HomeScreen extends StatefulWidget {

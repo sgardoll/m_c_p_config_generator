@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:dreamflow/services/auth_service.dart';
-import 'package:dreamflow/screens/home_screen.dart';
+import 'package:mcp_config_manager/services/auth_service.dart';
+import 'package:mcp_config_manager/screens/home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -9,12 +9,13 @@ class AuthScreen extends StatefulWidget {
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateMixin {
+class _AuthScreenState extends State<AuthScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
-  
+
   bool _isLogin = true;
   bool _isLoading = false;
   String? _errorMessage;
@@ -94,7 +95,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -203,12 +204,13 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                 return null;
                               },
                             ),
-                            if (_errorMessage != null) ...[  
+                            if (_errorMessage != null) ...[
                               const SizedBox(height: 16),
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.error.withOpacity(0.1),
+                                  color:
+                                      theme.colorScheme.error.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -227,7 +229,8 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: theme.colorScheme.primary,
                                 foregroundColor: theme.colorScheme.onPrimary,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -239,8 +242,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                       width: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                            Colors.white),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
                                       ),
                                     )
                                   : Text(

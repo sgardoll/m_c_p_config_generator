@@ -1,15 +1,13 @@
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-
 import 'package:flutter/material.dart';
-import 'package:dreamflow/screens/auth_screen.dart';
-import 'package:dreamflow/screens/home_screen.dart';
-import 'package:dreamflow/services/auth_service.dart';
+import 'package:mcp_config_manager/screens/auth_screen.dart';
+import 'package:mcp_config_manager/screens/home_screen.dart';
+import 'package:mcp_config_manager/services/auth_service.dart';
 import 'theme.dart';
 
 void main() async {
-  
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
