@@ -1,4 +1,4 @@
-import 'package:dreamflow/models/mcp_config.dart';
+import 'package:mcp_config_manager/models/mcp_config.dart';
 
 class ServerTemplate {
   final String id;
@@ -29,8 +29,6 @@ class ServerTemplate {
       args: List.from(defaultArgs),
       env: env,
     );
-
-    
   }
 }
 
@@ -49,7 +47,9 @@ class EnvCredential {
 }
 
 class ServerTemplateRepository {
+  // This list will now serve as fallback templates and will be updated dynamically
   static final List<ServerTemplate> templates = [
+    // Core templates
     ServerTemplate(
       id: 'github',
       name: 'GitHub',
@@ -129,6 +129,7 @@ class ServerTemplateRepository {
       ],
       iconName: 'event_note',
     ),
+    // Storage templates
     ServerTemplate(
       id: 'google_drive',
       name: 'Google Drive',
@@ -188,6 +189,7 @@ class ServerTemplateRepository {
       ],
       iconName: 'storage',
     ),
+    // Development tools
     ServerTemplate(
       id: 'git',
       name: 'Git',
@@ -197,6 +199,7 @@ class ServerTemplateRepository {
       credentials: [],
       iconName: 'merge_type',
     ),
+    // Utility templates
     ServerTemplate(
       id: 'brave_search',
       name: 'Brave Search',
@@ -234,7 +237,7 @@ class ServerTemplateRepository {
       command: 'npx',
       defaultArgs: ['-y', 'mcp_weather'],
       credentials: [],
-      iconName: 'cloud',
+      iconName: 'wb_sunny',
     ),
     ServerTemplate(
       id: 'aws_kb',
@@ -252,36 +255,22 @@ class ServerTemplateRepository {
         EnvCredential(
           key: 'AWS_SECRET_ACCESS_KEY',
           displayName: 'AWS Secret Access Key',
-          description: 'AWS secret access key for authentication',
+          description: 'AWS secret key for authentication',
         ),
         EnvCredential(
           key: 'AWS_REGION',
           displayName: 'AWS Region',
-          description: 'AWS region for the Knowledge Base',
+          description: 'AWS region for Bedrock (e.g., us-east-1)',
           isSecret: false,
         ),
       ],
       iconName: 'cloud_queue',
     ),
-    ServerTemplate(
-      id: 'asana',
-      name: 'Asana',
-      description: 'Manage Asana tasks, projects, and workspaces',
-      command: 'npx',
-      defaultArgs: ['-y', '@modelcontextprotocol/server-asana'],
-      credentials: [
-        EnvCredential(
-          key: 'ASANA_ACCESS_TOKEN',
-          displayName: 'Asana Access Token',
-          description: 'Personal access token for Asana',
-        ),
-      ],
-      iconName: 'check_circle',
-    ),
+    // Communication tools
     ServerTemplate(
       id: 'discord',
       name: 'Discord',
-      description: 'Interact with Discord servers, channels, and messages',
+      description: 'Interact with Discord channels and messages',
       command: 'npx',
       defaultArgs: ['-y', '@modelcontextprotocol/server-discord'],
       credentials: [
@@ -303,12 +292,12 @@ class ServerTemplateRepository {
         EnvCredential(
           key: 'TRELLO_API_KEY',
           displayName: 'Trello API Key',
-          description: 'API key from Trello',
+          description: 'API key from Trello Developer Portal',
         ),
         EnvCredential(
           key: 'TRELLO_TOKEN',
           displayName: 'Trello Token',
-          description: 'Authentication token for Trello',
+          description: 'Token with appropriate permissions',
         ),
       ],
       iconName: 'dashboard',
@@ -316,45 +305,70 @@ class ServerTemplateRepository {
     ServerTemplate(
       id: 'linear',
       name: 'Linear',
-      description:
-          'Manage software development tasks, issues and projects in Linear',
+      description: 'Access and manage Linear issues and projects',
       command: 'npx',
       defaultArgs: ['-y', '@modelcontextprotocol/server-linear'],
       credentials: [
         EnvCredential(
           key: 'LINEAR_API_KEY',
           displayName: 'Linear API Key',
-          description: 'API key from Linear',
+          description: 'API key from Linear settings',
         ),
       ],
       iconName: 'linear_scale',
     ),
     ServerTemplate(
+      id: 'asana',
+      name: 'Asana',
+      description: 'Manage Asana tasks, projects, and workspaces',
+      command: 'npx',
+      defaultArgs: ['-y', '@modelcontextprotocol/server-asana'],
+      credentials: [
+        EnvCredential(
+          key: 'ASANA_ACCESS_TOKEN',
+          displayName: 'Asana Access Token',
+          description: 'Personal access token from Asana developer console',
+        ),
+      ],
+      iconName: 'dashboard_customize',
+    ),
+    ServerTemplate(
       id: 'figma',
       name: 'Figma',
-      description: 'Access and manage Figma design files and projects',
+      description: 'Access Figma files and designs',
       command: 'npx',
       defaultArgs: ['-y', '@modelcontextprotocol/server-figma'],
       credentials: [
         EnvCredential(
           key: 'FIGMA_ACCESS_TOKEN',
           displayName: 'Figma Access Token',
-          description: 'Personal access token for Figma API',
+          description: 'Personal access token from Figma settings',
         ),
       ],
       iconName: 'dashboard_customize',
     ),
     ServerTemplate(
       id: 'calendar',
-      name: 'Calendar',
-      description: 'Manage Google Calendar events and schedules',
+      name: 'Google Calendar',
+      description: 'Manage events and schedules in Google Calendar',
       command: 'npx',
       defaultArgs: ['-y', '@modelcontextprotocol/server-calendar'],
       credentials: [
         EnvCredential(
-          key: 'CALENDAR_CREDENTIALS',
-          displayName: 'Calendar Credentials',
-          description: 'JSON credentials for Google Calendar API access',
+          key: 'GOOGLE_CLIENT_ID',
+          displayName: 'Google Client ID',
+          description: 'OAuth client ID from Google Cloud Console',
+          isSecret: false,
+        ),
+        EnvCredential(
+          key: 'GOOGLE_CLIENT_SECRET',
+          displayName: 'Google Client Secret',
+          description: 'OAuth client secret from Google Cloud Console',
+        ),
+        EnvCredential(
+          key: 'GOOGLE_REFRESH_TOKEN',
+          displayName: 'Google Refresh Token',
+          description: 'OAuth refresh token for long-term access',
         ),
       ],
       iconName: 'calendar_today',
@@ -362,29 +376,41 @@ class ServerTemplateRepository {
     ServerTemplate(
       id: 'gmail',
       name: 'Gmail',
-      description: 'Access and manage Gmail emails and drafts',
+      description: 'Access and send emails through Gmail',
       command: 'npx',
       defaultArgs: ['-y', '@modelcontextprotocol/server-gmail'],
       credentials: [
         EnvCredential(
-          key: 'GMAIL_CREDENTIALS',
-          displayName: 'Gmail Credentials',
-          description: 'JSON credentials for Gmail API access',
+          key: 'GOOGLE_CLIENT_ID',
+          displayName: 'Google Client ID',
+          description: 'OAuth client ID from Google Cloud Console',
+          isSecret: false,
+        ),
+        EnvCredential(
+          key: 'GOOGLE_CLIENT_SECRET',
+          displayName: 'Google Client Secret',
+          description: 'OAuth client secret from Google Cloud Console',
+        ),
+        EnvCredential(
+          key: 'GOOGLE_REFRESH_TOKEN',
+          displayName: 'Google Refresh Token',
+          description: 'OAuth refresh token for long-term access',
         ),
       ],
       iconName: 'email',
     ),
+    // Business & E-commerce
     ServerTemplate(
       id: 'stripe',
       name: 'Stripe',
-      description: 'Manage payments, customers, and subscriptions with Stripe',
+      description: 'Access Stripe payment data and customers',
       command: 'npx',
       defaultArgs: ['-y', '@modelcontextprotocol/server-stripe'],
       credentials: [
         EnvCredential(
           key: 'STRIPE_API_KEY',
           displayName: 'Stripe API Key',
-          description: 'Secret API key from Stripe dashboard',
+          description: 'Secret key from Stripe Dashboard',
         ),
       ],
       iconName: 'payment',
@@ -392,25 +418,20 @@ class ServerTemplateRepository {
     ServerTemplate(
       id: 'shopify',
       name: 'Shopify',
-      description: 'Manage Shopify store, products, orders, and customers',
+      description: 'Access Shopify store, products, and orders',
       command: 'npx',
       defaultArgs: ['-y', '@modelcontextprotocol/server-shopify'],
       credentials: [
         EnvCredential(
-          key: 'SHOPIFY_API_KEY',
-          displayName: 'Shopify API Key',
-          description: 'API key from Shopify admin',
-        ),
-        EnvCredential(
-          key: 'SHOPIFY_API_SECRET',
-          displayName: 'Shopify API Secret',
-          description: 'API secret from Shopify admin',
-        ),
-        EnvCredential(
-          key: 'SHOPIFY_STORE_URL',
-          displayName: 'Shopify Store URL',
-          description: 'Your Shopify store URL (e.g., mystore.myshopify.com)',
+          key: 'SHOPIFY_SHOP_NAME',
+          displayName: 'Shopify Shop Name',
+          description: 'Your shop name (e.g., mystore.myshopify.com)',
           isSecret: false,
+        ),
+        EnvCredential(
+          key: 'SHOPIFY_ACCESS_TOKEN',
+          displayName: 'Shopify Access Token',
+          description: 'Admin API access token',
         ),
       ],
       iconName: 'shopping_bag',
@@ -418,26 +439,26 @@ class ServerTemplateRepository {
     ServerTemplate(
       id: 'zendesk',
       name: 'Zendesk',
-      description: 'Manage support tickets and customer service in Zendesk',
+      description: 'Access and manage Zendesk support tickets',
       command: 'npx',
       defaultArgs: ['-y', '@modelcontextprotocol/server-zendesk'],
       credentials: [
-        EnvCredential(
-          key: 'ZENDESK_EMAIL',
-          displayName: 'Zendesk Email',
-          description: 'Email address for Zendesk account',
-          isSecret: false,
-        ),
-        EnvCredential(
-          key: 'ZENDESK_API_TOKEN',
-          displayName: 'Zendesk API Token',
-          description: 'API token for Zendesk access',
-        ),
         EnvCredential(
           key: 'ZENDESK_SUBDOMAIN',
           displayName: 'Zendesk Subdomain',
           description: 'Your Zendesk subdomain (e.g., company.zendesk.com)',
           isSecret: false,
+        ),
+        EnvCredential(
+          key: 'ZENDESK_EMAIL',
+          displayName: 'Zendesk Email',
+          description: 'Email address for authentication',
+          isSecret: false,
+        ),
+        EnvCredential(
+          key: 'ZENDESK_API_TOKEN',
+          displayName: 'Zendesk API Token',
+          description: 'API token from Zendesk admin settings',
         ),
       ],
       iconName: 'support_agent',
@@ -445,14 +466,20 @@ class ServerTemplateRepository {
     ServerTemplate(
       id: 'confluence',
       name: 'Confluence',
-      description: 'Access and manage Atlassian Confluence pages and content',
+      description: 'Access and manage Confluence pages and spaces',
       command: 'npx',
       defaultArgs: ['-y', '@modelcontextprotocol/server-confluence'],
       credentials: [
         EnvCredential(
+          key: 'CONFLUENCE_DOMAIN',
+          displayName: 'Confluence Domain',
+          description: 'Your Confluence domain (e.g., company.atlassian.net)',
+          isSecret: false,
+        ),
+        EnvCredential(
           key: 'CONFLUENCE_EMAIL',
           displayName: 'Confluence Email',
-          description: 'Email address for Confluence account',
+          description: 'Email associated with your Confluence account',
           isSecret: false,
         ),
         EnvCredential(
@@ -460,92 +487,52 @@ class ServerTemplateRepository {
           displayName: 'Confluence API Token',
           description: 'API token for Confluence access',
         ),
-        EnvCredential(
-          key: 'CONFLUENCE_DOMAIN',
-          displayName: 'Confluence Domain',
-          description: 'Your Confluence domain (e.g., company.atlassian.net)',
-          isSecret: false,
-        ),
       ],
       iconName: 'article',
     ),
     ServerTemplate(
       id: 'microsoft_teams',
       name: 'Microsoft Teams',
-      description: 'Interact with Microsoft Teams channels and messages',
+      description: 'Interact with Microsoft Teams channels and chats',
       command: 'npx',
-      defaultArgs: ['-y', '@modelcontextprotocol/server-ms-teams'],
+      defaultArgs: ['-y', '@modelcontextprotocol/server-teams'],
       credentials: [
         EnvCredential(
-          key: 'MS_CLIENT_ID',
-          displayName: 'Microsoft Client ID',
-          description: 'Client ID from Microsoft Azure portal',
-        ),
-        EnvCredential(
-          key: 'MS_CLIENT_SECRET',
-          displayName: 'Microsoft Client Secret',
-          description: 'Client secret from Microsoft Azure portal',
-        ),
-        EnvCredential(
-          key: 'MS_TENANT_ID',
-          displayName: 'Microsoft Tenant ID',
-          description: 'Tenant ID from Microsoft Azure portal',
+          key: 'MS_APP_ID',
+          displayName: 'Microsoft App ID',
+          description: 'App ID from Azure Portal',
           isSecret: false,
+        ),
+        EnvCredential(
+          key: 'MS_APP_PASSWORD',
+          displayName: 'Microsoft App Password',
+          description: 'App secret from Azure Portal',
         ),
       ],
       iconName: 'groups',
     ),
-    ServerTemplate(
-      id: 'prompts',
-      name: 'Prompt Templates',
-      description: 'Generate structured prompts for common tasks',
-      command: 'npx',
-      defaultArgs: ['-y', '@modelcontextprotocol/server-prompts'],
-      credentials: [],
-      iconName: 'text_fields',
-    ),
-    ServerTemplate(
-      id: 'inspector',
-      name: 'MCP Inspector',
-      description: 'Debug and test other MCP servers',
-      command: 'npx',
-      defaultArgs: ['-y', '@modelcontextprotocol/inspector'],
-      credentials: [],
-      iconName: 'bug_report',
-    ),
-    ServerTemplate(
-      id: 'weather_tool',
-      name: 'Weather Tools',
-      description: 'Retrieve weather forecasts and conditions',
-      command: 'uvx',
-      defaultArgs: ['--directory', '.', 'run', 'weather.py'],
-      credentials: [],
-      iconName: 'wb_sunny',
-    ),
-    ServerTemplate(
-      id: 'python_custom',
-      name: 'Python Server',
-      description: 'Run a Python MCP server with UV',
-      command: 'uv',
-      defaultArgs: ['--directory', '{directory}', 'run', '{script}'],
-      credentials: [],
-      iconName: 'code',
-    ),
+    // Custom template should always be last
     ServerTemplate(
       id: 'custom',
       name: 'Custom Server',
-      description: 'Configure a custom MCP server',
-      command: '',
-      defaultArgs: [],
+      description: 'Create a custom server configuration',
+      command: 'npx',
+      defaultArgs: ['-y', '@modelcontextprotocol/server-custom'],
       credentials: [],
       iconName: 'settings',
     ),
   ];
 
-  static ServerTemplate getTemplateById(String id) {
-    return templates.firstWhere(
-      (template) => template.id == id,
-      orElse: () => templates.last, // Return the custom template if not found
-    );
+  // Instance of dynamic templates
+  static List<ServerTemplate>? _dynamicTemplates;
+
+  // Update templates with the dynamic ones
+  static void updateTemplates(List<ServerTemplate> newTemplates) {
+    _dynamicTemplates = newTemplates;
+  }
+
+  // Get the currently active templates
+  static List<ServerTemplate> get activeTemplates {
+    return _dynamicTemplates ?? templates;
   }
 }

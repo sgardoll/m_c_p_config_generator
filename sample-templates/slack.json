@@ -1,0 +1,22 @@
+{
+  "id": "slack",
+  "name": "Slack",
+  "description": "Interact with Slack channels and messages",
+  "command": "npx",
+  "defaultArgs": ["-y", "@modelcontextprotocol/server-slack"],
+  "credentials": [
+    {
+      "key": "SLACK_BOT_TOKEN",
+      "displayName": "Slack Bot Token",
+      "description": "Bot token for Slack API access. Create one at https://api.slack.com/apps",
+      "isSecret": true
+    },
+    {
+      "key": "SLACK_SIGNING_SECRET",
+      "displayName": "Slack Signing Secret",
+      "description": "Required for verifying requests from Slack",
+      "isSecret": true
+    }
+  ],
+  "iconName": "chat"
+}

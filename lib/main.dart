@@ -2,14 +2,31 @@ import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'package:flutter/material.dart';
+import 'package:mcp_config_manager/models/server_template.dart';
 import 'package:mcp_config_manager/screens/auth_screen.dart';
 import 'package:mcp_config_manager/screens/home_screen.dart';
 import 'package:mcp_config_manager/services/auth_service.dart';
+import 'package:mcp_config_manager/services/template_service.dart';
 import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize templates from cache
+  final templateService = TemplateService();
+  try {
+    final templates = await templateService.getCachedTemplates();
+    ServerTemplateRepository.updateTemplates(templates);
+
+    // Start fetching templates in background
+    templateService.getTemplates().then((templates) {
+      ServerTemplateRepository.updateTemplates(templates);
+    });
+  } catch (e) {
+    print('Error initializing templates: $e');
+  }
+
   runApp(const MyApp());
 }
 

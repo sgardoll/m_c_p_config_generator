@@ -3,6 +3,7 @@ import 'package:mcp_config_manager/models/mcp_config.dart';
 import 'package:mcp_config_manager/models/server_template.dart';
 import 'package:mcp_config_manager/services/config_service.dart';
 import 'package:mcp_config_manager/services/ai_service.dart';
+import 'package:mcp_config_manager/services/template_service.dart';
 import 'package:mcp_config_manager/screens/preview_screen.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -20,6 +21,7 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
   final _configService = ConfigService();
   final _aiService = AiService();
   final _secureStorage = const FlutterSecureStorage();
+  final _templateService = TemplateService();
 
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -30,10 +32,12 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
   List<TextEditingController> _credentialControllers = [];
   String? _serverKey;
   bool _isLoading = false;
+  bool _isTemplatesLoading = true;
   bool _isCustomServer = false;
   final _commandController = TextEditingController();
   final _argsController = TextEditingController();
   bool _isInitialized = false;
+  bool _isRefreshing = false;
 
   // Bottom sheet visibility controller
   bool _showCredentialSheet = false;
@@ -109,7 +113,8 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
   }
 
   void _updateFilteredTemplates() {
-    _filteredTemplates = ServerTemplateRepository.templates.where((template) {
+    _filteredTemplates =
+        ServerTemplateRepository.activeTemplates.where((template) {
       // Skip the custom template for filtering
       if (template.id == 'custom') return false;
 
@@ -131,15 +136,18 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
         (_searchQuery.isEmpty ||
             'custom'.contains(_searchQuery) ||
             'custom server'.contains(_searchQuery))) {
-      _filteredTemplates.add(ServerTemplateRepository.templates.last);
+      _filteredTemplates.add(ServerTemplateRepository.activeTemplates.lastWhere(
+        (t) => t.id == 'custom',
+        orElse: () => ServerTemplateRepository.templates.last,
+      ));
     }
   }
 
   @override
   void initState() {
     super.initState();
+    _loadTemplates();
     _loadConfig();
-    _updateFilteredTemplates(); // Initialize filtered templates
   }
 
   @override
@@ -152,6 +160,75 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _loadTemplates() async {
+    setState(() {
+      _isTemplatesLoading = true;
+    });
+
+    try {
+      // Fetch templates from GitHub or cache
+      final templates = await _templateService.getTemplates();
+
+      // Update the repository with dynamic templates
+      ServerTemplateRepository.updateTemplates(templates);
+
+      // Initialize with the first template
+      if (templates.isNotEmpty && _selectedTemplate.id == 'github') {
+        _selectedTemplate = templates.first;
+      }
+
+      // Update filtered templates
+      _updateFilteredTemplates();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading templates: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTemplatesLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _refreshTemplates() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    try {
+      // Force refresh templates from GitHub
+      final templates = await _templateService.getTemplates(forceRefresh: true);
+
+      // Update the repository with dynamic templates
+      ServerTemplateRepository.updateTemplates(templates);
+
+      // Update filtered templates
+      _updateFilteredTemplates();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Templates refreshed successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error refreshing templates: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadConfig() async {
@@ -655,6 +732,11 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
               tooltip: 'AI Suggestions',
               onPressed: _generateAiSuggestion,
             ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh Templates',
+            onPressed: _isRefreshing ? null : _refreshTemplates,
+          ),
         ],
       ),
       body: SafeArea(
@@ -689,6 +771,21 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
                         hintText: 'Search templates...',
                         prefixIcon: Icon(Icons.search,
                             color: theme.colorScheme.primary),
+                        suffixIcon: _isRefreshing
+                            ? SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : null,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide:
@@ -737,186 +834,273 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
                 ),
               ),
 
-              // Template selection as scrollable list
+              // Template selection as scrollable grid with animations
               Expanded(
-                child: _filteredTemplates.isEmpty
+                child: _isTemplatesLoading
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.search_off,
-                              size: 64,
-                              color: theme.colorScheme.primary.withOpacity(0.5),
-                            ),
+                            CircularProgressIndicator(),
                             const SizedBox(height: 16),
                             Text(
-                              'No matching templates',
+                              'Loading templates...',
                               style: theme.textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Try a different search term or category',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onBackground
-                                    .withOpacity(0.6),
-                              ),
                             ),
                           ],
                         ),
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 16, horizontal: 24),
-                        itemCount: _filteredTemplates.length,
-                        itemBuilder: (context, index) {
-                          final template = _filteredTemplates[index];
-                          final bool isSelected = _selectedTemplate == template;
-                          final String category = template.id != 'custom'
-                              ? _getTemplateCategory(template.id)
-                              : 'utility';
-
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            elevation: isSelected ? 2 : 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: isSelected
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.outline
-                                        .withOpacity(0.3),
-                                width: isSelected ? 2 : 1,
-                              ),
+                    : _filteredTemplates.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.search_off,
+                                  size: 64,
+                                  color: theme.colorScheme.primary
+                                      .withOpacity(0.5),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No matching templates',
+                                  style: theme.textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Try a different search term or category',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onBackground
+                                        .withOpacity(0.6),
+                                  ),
+                                ),
+                              ],
                             ),
-                            child: InkWell(
-                              onTap: () {
-                                _selectTemplate(template);
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          width: 48,
-                                          height: 48,
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? theme.colorScheme.primary
-                                                    .withOpacity(0.1)
-                                                : theme.colorScheme.surface,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            border: Border.all(
-                                              color: isSelected
-                                                  ? theme.colorScheme.primary
-                                                  : theme.colorScheme.outline
-                                                      .withOpacity(0.3),
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            _getIconData(template.iconName),
-                                            color: isSelected
-                                                ? theme.colorScheme.primary
-                                                : theme.colorScheme.onSurface
-                                                    .withOpacity(0.8),
-                                            size: 24,
-                                          ),
+                          )
+                        : GridView.builder(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 16, horizontal: 24),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: 0.85,
+                            ),
+                            itemCount: _filteredTemplates.length,
+                            itemBuilder: (context, index) {
+                              final template = _filteredTemplates[index];
+                              final bool isSelected =
+                                  _selectedTemplate == template;
+                              final String category = template.id != 'custom'
+                                  ? _getTemplateCategory(template.id)
+                                  : 'utility';
+
+                              return Hero(
+                                tag: 'template-${template.id}',
+                                child: Material(
+                                  type: MaterialType.transparency,
+                                  child: AnimatedScale(
+                                    scale: isSelected ? 1.05 : 1.0,
+                                    duration: const Duration(milliseconds: 200),
+                                    child: Card(
+                                      elevation: isSelected ? 4 : 1,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        side: BorderSide(
+                                          color: isSelected
+                                              ? theme.colorScheme.primary
+                                              : theme.colorScheme.outline
+                                                  .withOpacity(0.3),
+                                          width: isSelected ? 2 : 1,
                                         ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
+                                      ),
+                                      child: InkWell(
+                                        onTap: () {
+                                          _selectTemplate(template);
+                                        },
+                                        borderRadius: BorderRadius.circular(16),
+                                        splashColor: theme.colorScheme.primary
+                                            .withOpacity(0.1),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16),
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              Text(
-                                                template.name,
-                                                style: theme
-                                                    .textTheme.titleMedium
-                                                    ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isSelected
-                                                      ? theme
-                                                          .colorScheme.primary
-                                                      : theme.colorScheme
-                                                          .onSurface,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
                                               Row(
                                                 children: [
                                                   Container(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 2),
+                                                    width: 48,
+                                                    height: 48,
                                                     decoration: BoxDecoration(
-                                                      color: theme.colorScheme
-                                                          .surfaceVariant,
+                                                      color: isSelected
+                                                          ? theme.colorScheme
+                                                              .primary
+                                                              .withOpacity(0.2)
+                                                          : theme.colorScheme
+                                                              .surface,
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                              4),
-                                                    ),
-                                                    child: Text(
-                                                      _categories[category] ??
-                                                          'Utility',
-                                                      style: theme
-                                                          .textTheme.labelSmall
-                                                          ?.copyWith(
-                                                        color: theme.colorScheme
-                                                            .onSurfaceVariant,
+                                                              12),
+                                                      border: Border.all(
+                                                        color: isSelected
+                                                            ? theme.colorScheme
+                                                                .primary
+                                                            : theme.colorScheme
+                                                                .outline
+                                                                .withOpacity(
+                                                                    0.3),
                                                       ),
+                                                    ),
+                                                    child: Icon(
+                                                      _getIconData(
+                                                          template.iconName),
+                                                      color: isSelected
+                                                          ? theme.colorScheme
+                                                              .primary
+                                                          : theme.colorScheme
+                                                              .onSurface
+                                                              .withOpacity(0.8),
+                                                      size: 24,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          template.name,
+                                                          style: theme.textTheme
+                                                              .titleMedium
+                                                              ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: isSelected
+                                                                ? theme
+                                                                    .colorScheme
+                                                                    .primary
+                                                                : theme
+                                                                    .colorScheme
+                                                                    .onSurface,
+                                                          ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 4),
+                                                        Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                                  horizontal: 6,
+                                                                  vertical: 2),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: theme
+                                                                .colorScheme
+                                                                .surfaceVariant,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        4),
+                                                          ),
+                                                          child: Text(
+                                                            _categories[
+                                                                    category] ??
+                                                                'Utility',
+                                                            style: theme
+                                                                .textTheme
+                                                                .labelSmall
+                                                                ?.copyWith(
+                                                              color: theme
+                                                                  .colorScheme
+                                                                  .onSurfaceVariant,
+                                                            ),
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ),
                                                 ],
                                               ),
+                                              Expanded(
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 8.0),
+                                                  child: Text(
+                                                    template.description,
+                                                    style: theme
+                                                        .textTheme.bodySmall
+                                                        ?.copyWith(
+                                                      color: theme
+                                                          .colorScheme.onSurface
+                                                          .withOpacity(0.7),
+                                                    ),
+                                                    maxLines: 3,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ),
+                                              if (isSelected)
+                                                Container(
+                                                  width: double.infinity,
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 4),
+                                                  decoration: BoxDecoration(
+                                                    color: theme
+                                                        .colorScheme.primary
+                                                        .withOpacity(0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            4),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Icon(
+                                                        Icons.check_circle,
+                                                        color: theme.colorScheme
+                                                            .primary,
+                                                        size: 14,
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        'Selected',
+                                                        style: theme.textTheme
+                                                            .labelSmall
+                                                            ?.copyWith(
+                                                          color: theme
+                                                              .colorScheme
+                                                              .primary,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
                                             ],
                                           ),
                                         ),
-                                        if (isSelected)
-                                          Icon(
-                                            Icons.check_circle,
-                                            color: theme.colorScheme.primary,
-                                          ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      template.description,
-                                      style:
-                                          theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.onSurface
-                                            .withOpacity(0.7),
                                       ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    if (template.id != 'custom') ...[
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Command: ${template.command} ${template.defaultArgs.join(' ')}',
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          fontFamily: 'monospace',
-                                          fontSize: 10,
-                                          color: theme.colorScheme.onSurface
-                                              .withOpacity(0.5),
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                              );
+                            },
+                          ),
               ),
 
               // Conditional form fields based on selection
