@@ -597,7 +597,10 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
                         height: 50,
                         child: ElevatedButton(
                           onPressed: () {
+                            // Close the bottom sheet
                             Navigator.of(context).pop();
+                            // Save the configuration and navigate back
+                            _saveConfiguration();
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: theme.colorScheme.primary,
@@ -608,7 +611,7 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
                             elevation: 0,
                           ),
                           child: const Text(
-                            'Save Credentials',
+                            'Save & Add Server',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
